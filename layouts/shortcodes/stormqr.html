@@ -1,0 +1,230 @@
+{{/*  
+    StormQR Hugo Shortcode by Ruben Storm 
+    MIT License – https://opensource.org/licenses/MIT 
+    Source: https://github.com/rubenstorm/stormqr
+*/}}
+
+{{ $data := .Get "data" | default "" }} {{ $idRaw := .Get "identifier" |
+default "" }} {{ $id := lower $idRaw }} {{ $title := .Get "title" | default
+"Copy QR" }} {{ $showLogo := .Get "logo" | default "true" | lower }} {{ $align
+:= .Get "align" | default "center" | lower }} {{ $trustWalletCDN :=
+"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains" }} {{
+$showIcon := and (ne $id "false") (ne $id "") }} {{ $iconPath := "" }} {{ if eq
+$id "lightning" }} {{ $iconPath =
+"https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/zap.svg" }} {{
+else if $showIcon }} {{ $iconPath = print $trustWalletCDN "/" $id
+"/info/logo.png" }} {{ else }} {{ $iconPath =
+"https://www.svgrepo.com/show/475753/copy.svg" }} {{ end }} {{ $pulseClass :=
+$showIcon }}
+
+<style>
+  .stormqr-wrapper {
+    display: inline-block;
+    text-align: center;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .stormqr-container {
+    position: relative;
+    display: inline-block;
+    padding: 1rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.05);
+    overflow: visible;
+  }
+
+  @media (prefers-color-scheme: light) {
+    .stormqr-container {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .stormqr-container {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  .stormqr-qr img {
+    border-radius: 12px;
+    display: block;
+    width: 180px;
+    height: 180px;
+  }
+
+  .stormqr-icon {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    cursor: pointer;
+  }
+
+  .stormqr-icon img {
+    width: 70%;
+    height: 70%;
+    pointer-events: none;
+  }
+
+  .stormqr-icon.pulse {
+    animation: pulse 2s infinite;
+  }
+
+  .stormqr-align-center {
+    display: flex;
+    justify-content: center;
+  }
+
+  .stormqr-align-left {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .stormqr-align-right {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  @keyframes pulse {
+
+    0%,
+    100% {
+      transform: scale(1);
+      filter: drop-shadow(0 0 3px #00ffea);
+    }
+
+    50% {
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 10px #00ffea);
+    }
+  }
+
+  .stormqr-logo-container {
+    margin-top: -25px;
+    /* almost touching */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .stormqr-logo {
+    width: 128px;
+    max-width: 100%;
+    object-fit: contain;
+    opacity: 0.9;
+    border-radius: 12px;
+  }
+
+
+
+  .stormqr-branding {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .stormqr-branding svg {
+    width: 120px;
+    height: auto;
+    pointer-events: none;
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.1));
+  }
+
+  .stormqr-poweredby {
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    user-select: none;
+    color: #aaa;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .stormqr-poweredby {
+      color: #aaa;
+      opacity: 0.5;
+    }
+  }
+</style>
+
+<script>
+  function stormqrCopyToClipboard(text) {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        const toast = document.getElementById("stormqr-toast");
+        if (!toast) return;
+        toast.style.opacity = "1";
+        toast.style.pointerEvents = "auto";
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          toast.style.pointerEvents = "none";
+        }, 2000);
+        console.log("Copied to clipboard:", text);
+      })
+      .catch((err) => {
+        console.error("Clipboard copy failed:", err);
+      });
+  }
+</script>
+
+<div class="stormqr-align-{{ $align }}">
+  <div class="stormqr-wrapper">
+    <div class="stormqr-container">
+      <div class="stormqr-qr">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ $data | urlquery }}&size=180x180" alt="QR Code" />
+      </div>
+
+      {{ if $showIcon }}
+      <div class="stormqr-icon {{ if $pulseClass }}pulse{{ end }}" title="{{ $title }}"
+        onclick="stormqrCopyToClipboard('{{ $data }}')">
+        <img src="{{ $iconPath }}" alt="Copy Icon" loading="lazy" />
+      </div>
+      {{ end }}
+    </div>
+
+    {{ if eq $showLogo "true" }}
+    <div class="stormqr-logo-container">
+      <img src="/images/stormqr-logo.svg" alt="StormQR Logo" class="stormqr-logo" loading="lazy" decoding="async" />
+    </div>
+  </div>
+  {{ else }}
+  <div class="stormqr-poweredby" aria-label="Powered by Ruben Storm" role="note" title="Powered by Ruben Storm">
+    Powered by Ruben Storm
+  </div>
+  {{ end }}
+</div>
+</div>
+
+<div id="stormqr-toast" style="
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #00ffea;
+    color: #003333;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  ">
+  Copied to clipboard!
+</div>
